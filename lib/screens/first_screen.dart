@@ -10,61 +10,64 @@ class FirstScreen extends StatefulWidget {
 }
 
 class _FirstScreenState extends State<FirstScreen> {
+  late final WebViewController _controller;
   String currentUrl = 'https://appv2.starkregen.de';
   bool showNavBar = false;
 
   final FlutterSecureStorage storage = const FlutterSecureStorage();
 
-  final controller = WebViewController()
-    ..setJavaScriptMode(JavaScriptMode.unrestricted)
-    ..loadRequest(Uri.parse(currentUrl))
-    ..setNavigationDelegate(NavigationDelegate(
-      onNavigationRequest: (NavigationRequest request) {
-        if (request.url == currentUrl) {
-          setState(() {
-            showNavBar = false;
-          });
-        } else {
-          setState(() {
-            showNavBar = true;
-          });
-        }
-        ;
-        return NavigationDecision.navigate;
-      },
-      onPageStarted: (String url) {
-        print('Page started loading: $url');
-        setState(() {
-          currentUrl = url;
-        });
-      },
-    ));
+  @override
+  void initState() {
+    super.initState();
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onUrlChange: (UrlChange change) {
+            if (change.url.toString().contains('ags')) {
+              debugPrint('url change to ${change.url}');
+              setState(() {
+                showNavBar = true;
+              });
+            } else {
+              setState(() {
+                showNavBar = false;
+              });
+            }
+          },
+        ),
+      )
+      ..loadRequest(Uri.parse(currentUrl));
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: WebViewWidget(controller: controller),
-        bottomNavigationBar: showNavBar
-            ? BottomNavigationBar(
-                items: const <BottomNavigationBarItem>[
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.home),
-                    label: 'Home',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.business),
-                    label: 'Business',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.school),
-                    label: 'School',
-                  ),
-                ],
-                selectedItemColor: Colors.amber[800],
-                onTap: (int index) {
-                  print('Tapped index: $index');
-                },
-              )
-            : null);
+      body: WebViewWidget(
+        controller: _controller,
+      ),
+      bottomNavigationBar: showNavBar
+          ? BottomNavigationBar(
+              items: const <BottomNavigationBarItem>[
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.home),
+                  label: 'Home',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.business),
+                  label: 'Business',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.school),
+                  label: 'School',
+                ),
+              ],
+              selectedItemColor: Colors.amber[800],
+              onTap: (int index) {
+                print('Tapped index: $index');
+              },
+            )
+          : null,
+    );
   }
 }
